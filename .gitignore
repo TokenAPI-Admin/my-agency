@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Runtime outputs
+workflow_ui/runs/
+workflow_ui/content_runs/
+out/
+logs/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

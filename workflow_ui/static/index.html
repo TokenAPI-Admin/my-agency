@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>电商一站式 AI 工作流</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --fg: #121317;
+      --muted: #5f6573;
+      --line: rgba(18, 19, 23, 0.14);
+      --glass: rgba(255, 255, 255, 0.72);
+      --panel: rgba(255, 255, 255, 0.92);
+      --ink: #191f2d;
+      --ok: #25643b;
+      --running: #274690;
+      --err: #9a2d2d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--fg);
+      letter-spacing: 0;
+      background:
+        radial-gradient(1200px 500px at 80% -20%, rgba(24, 45, 82, 0.08), transparent 70%),
+        linear-gradient(180deg, #fbfbfc, var(--bg));
+      font-family: "SF Pro Display", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { width: min(1120px, calc(100% - 30px)); margin: 0 auto; }
+    .top {
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      margin: 10px auto 0;
+      width: min(1120px, calc(100% - 20px));
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background: var(--glass);
+      backdrop-filter: blur(12px) saturate(140%);
+      border-radius: 999px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { font-size: 14px; font-weight: 650; }
+    .health {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    main { padding: 42px 0 40px; }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(30px, 5.6vw, 58px);
+      line-height: 1.08;
+      max-width: 13ch;
+      font-weight: 650;
+    }
+    .hero p {
+      margin: 16px 0 0;
+      color: var(--muted);
+      max-width: 74ch;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+    .surface {
+      margin-top: 24px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(244,246,250,.94));
+      box-shadow: 0 26px 70px rgba(14, 16, 22, 0.15);
+      padding: clamp(16px, 3vw, 24px);
+    }
+    .mode-switch {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px;
+      background: #fff;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 650;
+      background: transparent;
+      color: #3b4353;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: var(--ink);
+      color: #eef2ff;
+      box-shadow: 0 8px 16px rgba(25, 31, 45, 0.25);
+    }
+    .mode-desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .mode-pane { display: none; }
+    .mode-pane.active { display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      padding: 14px;
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 650;
+    }
+    .row { margin-bottom: 10px; }
+    .row:last-child { margin-bottom: 0; }
+    .row label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="file"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      font-size: 13px;
+      padding: 10px 11px;
+      color: #1e2430;
+    }
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .inline { display: flex; gap: 10px; }
+    .inline > div { flex: 1; }
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    button.action {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+    button.action.main {
+      background: var(--ink);
+      color: #f3f6ff;
+      box-shadow: 0 10px 22px rgba(25, 31, 45, 0.28);
+    }
+    button.action.alt {
+      background: #fff;
+      color: #1d2330;
+      border: 1px solid var(--line);
+    }
+    button.action[disabled] { opacity: .45; cursor: not-allowed; }
+    button.action:hover { transform: translateY(-1px); }
+    .status-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .status-chip {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #4a5160;
+    }
+    .status-chip.running { background: #eef4ff; color: var(--running); border-color: #cfe0ff; }
+    .status-chip.succeeded { background: #edf9f0; color: var(--ok); border-color: #cfeeda; }
+    .status-chip.failed { background: #fff0f0; color: var(--err); border-color: #ffd4d4; }
+    .progress-text {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e8eaf0;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #1f2a44;
+      transition: width .25s ease;
+    }
+    .stages {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .stages.story { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .stages.xhs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stage {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #6a7282;
+      background: #fff;
+      text-align: center;
+    }
+    .stage.done { color: #2f5b3f; border-color: #cfeeda; background: #f4fbf6; }
+    .stage.active { color: var(--running); border-color: #cfe0ff; background: #f2f7ff; }
+    .stage.failed { color: var(--err); border-color: #ffd4d4; background: #fff4f4; }
+    .error-box {
+      display: none;
+      border: 1px solid #ffd4d4;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--err);
+      background: #fff6f6;
+      margin-bottom: 10px;
+    }
+    .meta {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.72);
+      padding: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      min-height: 64px;
+    }
+    .log {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #101216;
+      color: #dde4f4;
+      padding: 12px;
+      min-height: 220px;
+      font-size: 12px;
+      font-family: "SF Mono", Consolas, monospace;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+    .outputs {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .outputs.single { grid-template-columns: 1fr; }
+    .out {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 10px;
+    }
+    .out h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #2a2f3a;
+    }
+    .out img {
+      width: 100%;
+      display: none;
+      border-radius: 10px;
+      background: #f2f4f8;
+      aspect-ratio: 1.2;
+      object-fit: cover;
+    }
+    .placeholder {
+      width: 100%;
+      border-radius: 10px;
+      background: #f2f4f8;
+      aspect-ratio: 1.2;
+      display: grid;
+      place-items: center;
+      color: #7a8190;
+      font-size: 12px;
+      text-align: center;
+      padding: 16px;
+    }
+    .out a {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #303954;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .json-preview {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcff;
+      padding: 10px;
+      max-height: 320px;
+      overflow: auto;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: #1f2635;
+    }
+    @media (max-width: 940px) {
+      .grid { grid-template-columns: 1fr; }
+      .outputs { grid-template-columns: 1fr; }
+      .stages.story { grid-template-columns: 1fr 1fr; }
+      .stages.xhs { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">电商一站式 AI 工作流</div>
+    <div id="health" class="health">checking...</div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>一个前端，跑两条生产链路</h1>
+      <p>分镜链路用于商品三视图和分镜总图。小红书链路用于买手笔记结构化产出。两套状态与日志完全分离，避免互相串流程。</p>
+    </section>
+
+    <section class="surface">
+      <div class="mode-switch">
+        <button class="mode-btn active" id="modeStoryboardBtn" data-mode="storyboard">分镜工作流</button>
+        <button class="mode-btn" id="modeXhsBtn" data-mode="xhs">小红书工作流</button>
+      </div>
+      <p id="modeDesc" class="mode-desc">输入产品图，生成三视图 + 分镜总图。</p>
+
+      <section id="mode-storyboard" class="mode-pane active">
+        <div class="grid">
+          <div class="panel">
+            <h2>任务输入</h2>
+            <div class="row">
+              <label>产品图</label>
+              <input id="sbProductImage" type="file" accept="image/png,image/jpeg,image/webp" />
+            </div>
+            <div class="row">
+              <label>固定参考图：内置（自动使用）</label>
+              <input type="text" value="主参考图1 + 模特固定板1" disabled />
+            </div>
+            <div class="inline">
+              <div class="row">
+                <label>三视图尺寸</label>
+                <select id="sbThreeViewSize">
+                  <option value="1024x1024" selected>1024x1024</option>
+                  <option value="1536x1024">1536x1024</option>
+                </select>
+              </div>
+              <div class="row">
+                <label>分镜总图尺寸</label>
+                <select id="sbStoryboardSize">
+                  <option value="1536x1024" selected>1536x1024</option>
+                  <option value="1024x1024">1024x1024</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="action main" id="sbRunBtn">生成三视图 + 分镜总图</button>
+              <button class="action alt" id="sbRefreshBtn">刷新状态</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>运行状态</h2>
+            <div class="status-top">
+              <div id="sbStatusChip" class="status-chip">IDLE</div>
+              <div id="sbProgressText" class="progress-text">0%</div>
+            </div>
+            <div class="progress-bar"><div id="sbProgressFill" class="progress-fill"></div></div>
+            <div id="sbStageList" class="stages story">
+              <div class="stage" data-stage="queued">排队</div>
+              <div class="stage" data-stage="validate">校验</div>
+              <div class="stage" data-stage="three">三视图</div>
+              <div class="stage" data-stage="story">分镜</div>
+              <div class="stage" data-stage="done">完成</div>
+            </div>
+            <div id="sbErrorBox" class="error-box"></div>
+            <div id="sbMeta" class="meta">No run yet.</div>
+            <div id="sbLog" class="log"></div>
+          </div>
+        </div>
+
+        <div class="outputs">
+          <div class="out">
+            <h3>三视图</h3>
+            <div id="sbPhThree" class="placeholder">暂无输出</div>
+            <img id="sbImgThree" alt="three view output" />
+            <a id="sbLinkThree" href="#" target="_blank" rel="noreferrer"></a>
+          </div>
+          <div class="out">
+            <h3>分镜总图</h3>
+            <div id="sbPhStory" class="placeholder">暂无输出</div>
+            <img id="sbImgStory" alt="storyboard output" />
+            <a id="sbLinkStory" href="#" target="_blank" rel="noreferrer"></a>
+          </div>
+        </div>
+      </section>
+
+      <section id="mode-xhs" class="mode-pane">
+        <div class="grid">
+          <div class="panel">
+            <h2>任务输入</h2>
+            <div class="row">
+              <label>产品主体图（必填）</label>
+              <input id="xhsProductImage" type="file" accept="image/png,image/jpeg,image/webp" />
+            </div>
+            <div class="row">
+              <label>参数/详情图（选填）</label>
+              <input id="xhsParamsImage" type="file" accept="image/png,image/jpeg,image/webp" />
+            </div>
+            <div class="row">
+              <label>内容语气</label>
+              <input id="xhsTone" type="text" value="克制买手感" />
+            </div>
+            <div class="row">
+              <label>产品补充参数（选填）</label>
+              <textarea id="xhsProductParams" placeholder="如：核心卖点、材质、适用人群、价格带、禁忌信息"></textarea>
+            </div>
+            <div class="btn-row">
+              <button class="action main" id="xhsRunBtn">生成买手笔记 JSON</button>
+              <button class="action alt" id="xhsRefreshBtn">刷新状态</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>运行状态</h2>
+            <div class="status-top">
+              <div id="xhsStatusChip" class="status-chip">IDLE</div>
+              <div id="xhsProgressText" class="progress-text">0%</div>
+            </div>
+            <div class="progress-bar"><div id="xhsProgressFill" class="progress-fill"></div></div>
+            <div id="xhsStageList" class="stages xhs">
+              <div class="stage" data-stage="queued">排队</div>
+              <div class="stage" data-stage="analyze">识别</div>
+              <div class="stage" data-stage="package">产出</div>
+              <div class="stage" data-stage="done">完成</div>
+            </div>
+            <div id="xhsErrorBox" class="error-box"></div>
+            <div id="xhsMeta" class="meta">No run yet.</div>
+            <div id="xhsLog" class="log"></div>
+          </div>
+        </div>
+
+        <div class="outputs single">
+          <div class="out">
+            <h3>买手笔记结果</h3>
+            <div id="xhsPhResult" class="placeholder">暂无输出</div>
+            <a id="xhsLinkResult" href="#" target="_blank" rel="noreferrer"></a>
+            <div id="xhsJsonPreview" class="json-preview" style="display:none;"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const modeState = {
+      current: "storyboard",
+      storyboard: { runId: null, pollTimer: null },
+      xhs: { contentId: null, pollTimer: null },
+    };
+
+    const modeDescMap = {
+      storyboard: "输入产品图，生成三视图 + 分镜总图。",
+      xhs: "输入产品主体图与参数图，生成小红书买手笔记结构化结果（JSON）。",
+    };
+
+    const sbSteps = ["queued", "validate", "three", "story", "done"];
+    const xhsSteps = ["queued", "analyze", "package", "done"];
+
+    const healthEl = document.getElementById("health");
+    const modeDesc = document.getElementById("modeDesc");
+    const modeStoryboardBtn = document.getElementById("modeStoryboardBtn");
+    const modeXhsBtn = document.getElementById("modeXhsBtn");
+    const modeStoryboardPane = document.getElementById("mode-storyboard");
+    const modeXhsPane = document.getElementById("mode-xhs");
+
+    const sbRunBtn = document.getElementById("sbRunBtn");
+    const sbRefreshBtn = document.getElementById("sbRefreshBtn");
+    const sbMeta = document.getElementById("sbMeta");
+    const sbLog = document.getElementById("sbLog");
+    const sbStatusChip = document.getElementById("sbStatusChip");
+    const sbProgressText = document.getElementById("sbProgressText");
+    const sbProgressFill = document.getElementById("sbProgressFill");
+    const sbStageList = document.getElementById("sbStageList");
+    const sbErrorBox = document.getElementById("sbErrorBox");
+    const sbImgThree = document.getElementById("sbImgThree");
+    const sbImgStory = document.getElementById("sbImgStory");
+    const sbPhThree = document.getElementById("sbPhThree");
+    const sbPhStory = document.getElementById("sbPhStory");
+    const sbLinkThree = document.getElementById("sbLinkThree");
+    const sbLinkStory = document.getElementById("sbLinkStory");
+
+    const xhsRunBtn = document.getElementById("xhsRunBtn");
+    const xhsRefreshBtn = document.getElementById("xhsRefreshBtn");
+    const xhsMeta = document.getElementById("xhsMeta");
+    const xhsLog = document.getElementById("xhsLog");
+    const xhsStatusChip = document.getElementById("xhsStatusChip");
+    const xhsProgressText = document.getElementById("xhsProgressText");
+    const xhsProgressFill = document.getElementById("xhsProgressFill");
+    const xhsStageList = document.getElementById("xhsStageList");
+    const xhsErrorBox = document.getElementById("xhsErrorBox");
+    const xhsPhResult = document.getElementById("xhsPhResult");
+    const xhsLinkResult = document.getElementById("xhsLinkResult");
+    const xhsJsonPreview = document.getElementById("xhsJsonPreview");
+
+    function setMode(mode) {
+      modeState.current = mode;
+      modeStoryboardBtn.classList.toggle("active", mode === "storyboard");
+      modeXhsBtn.classList.toggle("active", mode === "xhs");
+      modeStoryboardPane.classList.toggle("active", mode === "storyboard");
+      modeXhsPane.classList.toggle("active", mode === "xhs");
+      modeDesc.textContent = modeDescMap[mode];
+    }
+
+    function setLog(el, lines) {
+      el.textContent = (lines || []).join("\n");
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setMeta(el, text) { el.textContent = text; }
+
+    function setError(el, text) {
+      if (!text) {
+        el.style.display = "none";
+        el.textContent = "";
+        return;
+      }
+      el.textContent = text;
+      el.style.display = "block";
+    }
+
+    function setImageOutput(linkEl, imgEl, phEl, url, label) {
+      if (!url) {
+        linkEl.textContent = "";
+        linkEl.removeAttribute("href");
+        imgEl.removeAttribute("src");
+        imgEl.style.display = "none";
+        phEl.style.display = "grid";
+        return;
+      }
+      linkEl.textContent = label + ": " + url;
+      linkEl.href = url;
+      imgEl.src = url;
+      imgEl.style.display = "block";
+      phEl.style.display = "none";
+    }
+
+    function setJsonOutput(url) {
+      if (!url) {
+        xhsLinkResult.textContent = "";
+        xhsLinkResult.removeAttribute("href");
+        xhsPhResult.style.display = "grid";
+        xhsJsonPreview.style.display = "none";
+        xhsJsonPreview.textContent = "";
+        return;
+      }
+      xhsLinkResult.textContent = "open: " + url;
+      xhsLinkResult.href = url;
+      xhsPhResult.style.display = "none";
+    }
+
+    function applyProgress({ chipEl, textEl, fillEl, listEl, steps, progress, errorEl }) {
+      chipEl.textContent = progress.chip;
+      chipEl.className = "status-chip" + (progress.chipClass ? " " + progress.chipClass : "");
+      textEl.textContent = progress.percent + "%";
+      fillEl.style.width = progress.percent + "%";
+      setError(errorEl, progress.errorText);
+
+      const currentIndex = steps.indexOf(progress.stage);
+      listEl.querySelectorAll(".stage").forEach((el) => {
+        const idx = steps.indexOf(el.dataset.stage);
+        el.classList.remove("done", "active", "failed");
+        if (progress.status === "failed" && idx === currentIndex) {
+          el.classList.add("failed");
+          return;
+        }
+        if (idx < currentIndex) {
+          el.classList.add("done");
+        } else if (idx === currentIndex && progress.status !== "succeeded") {
+          el.classList.add("active");
+        } else if (progress.status === "succeeded" && idx <= currentIndex) {
+          el.classList.add("done");
+        }
+      });
+    }
+
+    function inferStoryboardProgress(data) {
+      const logs = data.logs || [];
+      const text = logs.join("\n");
+      const genCount = (text.match(/\[gpt-image-2\] generating/g) || []).length;
+      const hasValidate = text.includes("product image:");
+      const hasThreeDone = text.includes("kent_three_view.png");
+      let stage = "queued";
+      let percent = 0;
+      let chip = "IDLE";
+      let chipClass = "";
+      let errorText = "";
+
+      if (data.status === "running") {
+        chip = "RUNNING";
+        chipClass = "running";
+        stage = "queued";
+        percent = 8;
+        if (hasValidate) { stage = "validate"; percent = 24; }
+        if (genCount >= 1) { stage = "three"; percent = 52; }
+        if (hasThreeDone) { stage = "three"; percent = 68; }
+        if (genCount >= 2) { stage = "story"; percent = 86; }
+      } else if (data.status === "succeeded") {
+        chip = "SUCCEEDED";
+        chipClass = "succeeded";
+        stage = "done";
+        percent = 100;
+      } else if (data.status === "failed") {
+        chip = "FAILED";
+        chipClass = "failed";
+        stage = genCount > 0 ? "three" : "queued";
+        percent = genCount > 0 ? 52 : 8;
+        errorText = data.error || "generation failed; check logs";
+      }
+      return { stage, percent, chip, chipClass, errorText, status: data.status };
+    }
+
+    function inferXhsProgress(data) {
+      const logs = data.logs || [];
+      const text = logs.join("\n");
+      let stage = "queued";
+      let percent = 0;
+      let chip = "IDLE";
+      let chipClass = "";
+      let errorText = "";
+
+      if (data.status === "running") {
+        chip = "RUNNING";
+        chipClass = "running";
+        stage = "queued";
+        percent = 10;
+        if (text.includes("[start]")) { stage = "analyze"; percent = 42; }
+      } else if (data.status === "succeeded") {
+        chip = "SUCCEEDED";
+        chipClass = "succeeded";
+        stage = "done";
+        percent = 100;
+      } else if (data.status === "failed") {
+        chip = "FAILED";
+        chipClass = "failed";
+        stage = text.includes("[start]") ? "package" : "queued";
+        percent = text.includes("[start]") ? 72 : 10;
+        errorText = data.error || "generation failed; check logs";
+      }
+      if (text.includes("[done]") && data.status === "running") {
+        stage = "package";
+        percent = 88;
+      }
+      return { stage, percent, chip, chipClass, errorText, status: data.status };
+    }
+
+    async function loadHealth() {
+      try {
+        const res = await fetch("/api/health");
+        const data = await res.json();
+        healthEl.textContent = data.ok ? "service healthy" : "service degraded";
+      } catch {
+        healthEl.textContent = "service unreachable";
+      }
+    }
+
+    async function fetchStoryboardStatus() {
+      const runId = modeState.storyboard.runId;
+      if (!runId) return;
+      const res = await fetch("/api/status/" + runId);
+      if (!res.ok) return;
+      const data = await res.json();
+      applyProgress({
+        chipEl: sbStatusChip,
+        textEl: sbProgressText,
+        fillEl: sbProgressFill,
+        listEl: sbStageList,
+        steps: sbSteps,
+        progress: inferStoryboardProgress(data),
+        errorEl: sbErrorBox,
+      });
+      setMeta(sbMeta, "run_id: " + data.run_id + " | status: " + data.status + " | created: " + data.created_at + (data.ended_at ? " | ended: " + data.ended_at : ""));
+      setLog(sbLog, data.logs);
+      setImageOutput(sbLinkThree, sbImgThree, sbPhThree, data.outputs.three_view, "open");
+      setImageOutput(sbLinkStory, sbImgStory, sbPhStory, data.outputs.storyboard, "open");
+      sbRunBtn.disabled = data.status === "running";
+      if (data.status !== "running" && modeState.storyboard.pollTimer) {
+        clearInterval(modeState.storyboard.pollTimer);
+        modeState.storyboard.pollTimer = null;
+      }
+    }
+
+    async function fetchXhsStatus() {
+      const contentId = modeState.xhs.contentId;
+      if (!contentId) return;
+      const res = await fetch("/api/xhs/status/" + contentId);
+      if (!res.ok) return;
+      const data = await res.json();
+      applyProgress({
+        chipEl: xhsStatusChip,
+        textEl: xhsProgressText,
+        fillEl: xhsProgressFill,
+        listEl: xhsStageList,
+        steps: xhsSteps,
+        progress: inferXhsProgress(data),
+        errorEl: xhsErrorBox,
+      });
+      setMeta(xhsMeta, "content_id: " + data.content_id + " | status: " + data.status + " | created: " + data.created_at + (data.ended_at ? " | ended: " + data.ended_at : ""));
+      setLog(xhsLog, data.logs);
+      setJsonOutput(data.outputs && data.outputs.buyer_note ? data.outputs.buyer_note : null);
+      xhsRunBtn.disabled = data.status === "running";
+
+      if (data.status === "succeeded" && data.outputs && data.outputs.buyer_note) {
+        try {
+          const noteRes = await fetch(data.outputs.buyer_note);
+          if (noteRes.ok) {
+            const noteData = await noteRes.json();
+            xhsJsonPreview.style.display = "block";
+            xhsJsonPreview.textContent = JSON.stringify(noteData, null, 2);
+          }
+        } catch {
+          xhsJsonPreview.style.display = "none";
+        }
+      }
+
+      if (data.status !== "running" && modeState.xhs.pollTimer) {
+        clearInterval(modeState.xhs.pollTimer);
+        modeState.xhs.pollTimer = null;
+      }
+    }
+
+    async function startStoryboardRun() {
+      sbRunBtn.disabled = true;
+      applyProgress({
+        chipEl: sbStatusChip,
+        textEl: sbProgressText,
+        fillEl: sbProgressFill,
+        listEl: sbStageList,
+        steps: sbSteps,
+        progress: { stage: "queued", percent: 5, chip: "RUNNING", chipClass: "running", errorText: "", status: "running" },
+        errorEl: sbErrorBox,
+      });
+
+      const product = document.getElementById("sbProductImage").files[0];
+      if (!product) {
+        setMeta(sbMeta, "请先上传产品图。");
+        sbRunBtn.disabled = false;
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("use_defaults", "false");
+      fd.append("three_view_size", document.getElementById("sbThreeViewSize").value);
+      fd.append("storyboard_size", document.getElementById("sbStoryboardSize").value);
+      fd.append("product_image", product);
+
+      try {
+        const res = await fetch("/api/run", { method: "POST", body: fd });
+        if (!res.ok) {
+          const err = await res.json();
+          setMeta(sbMeta, "run start failed: " + (err.detail || res.status));
+          applyProgress({
+            chipEl: sbStatusChip,
+            textEl: sbProgressText,
+            fillEl: sbProgressFill,
+            listEl: sbStageList,
+            steps: sbSteps,
+            progress: { stage: "queued", percent: 0, chip: "FAILED", chipClass: "failed", errorText: err.detail || "run start failed", status: "failed" },
+            errorEl: sbErrorBox,
+          });
+          sbRunBtn.disabled = false;
+          return;
+        }
+        const data = await res.json();
+        modeState.storyboard.runId = data.run_id;
+        setMeta(sbMeta, "run queued: " + data.run_id);
+        setLog(sbLog, []);
+        setImageOutput(sbLinkThree, sbImgThree, sbPhThree, null, "open");
+        setImageOutput(sbLinkStory, sbImgStory, sbPhStory, null, "open");
+        await fetchStoryboardStatus();
+        if (modeState.storyboard.pollTimer) clearInterval(modeState.storyboard.pollTimer);
+        modeState.storyboard.pollTimer = setInterval(fetchStoryboardStatus, 2200);
+      } catch {
+        setMeta(sbMeta, "run start failed: network error");
+        sbRunBtn.disabled = false;
+      }
+    }
+
+    async function startXhsRun() {
+      xhsRunBtn.disabled = true;
+      applyProgress({
+        chipEl: xhsStatusChip,
+        textEl: xhsProgressText,
+        fillEl: xhsProgressFill,
+        listEl: xhsStageList,
+        steps: xhsSteps,
+        progress: { stage: "queued", percent: 8, chip: "RUNNING", chipClass: "running", errorText: "", status: "running" },
+        errorEl: xhsErrorBox,
+      });
+
+      const product = document.getElementById("xhsProductImage").files[0];
+      if (!product) {
+        setMeta(xhsMeta, "请先上传产品主体图。");
+        xhsRunBtn.disabled = false;
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("product_image", product);
+      fd.append("tone", document.getElementById("xhsTone").value || "克制买手感");
+      fd.append("product_params", document.getElementById("xhsProductParams").value || "");
+      const paramsImage = document.getElementById("xhsParamsImage").files[0];
+      if (paramsImage) fd.append("params_image", paramsImage);
+
+      try {
+        const res = await fetch("/api/xhs/buyer-note", { method: "POST", body: fd });
+        if (!res.ok) {
+          const err = await res.json();
+          setMeta(xhsMeta, "xhs start failed: " + (err.detail || res.status));
+          applyProgress({
+            chipEl: xhsStatusChip,
+            textEl: xhsProgressText,
+            fillEl: xhsProgressFill,
+            listEl: xhsStageList,
+            steps: xhsSteps,
+            progress: { stage: "queued", percent: 0, chip: "FAILED", chipClass: "failed", errorText: err.detail || "xhs start failed", status: "failed" },
+            errorEl: xhsErrorBox,
+          });
+          xhsRunBtn.disabled = false;
+          return;
+        }
+        const data = await res.json();
+        modeState.xhs.contentId = data.content_id;
+        setMeta(xhsMeta, "content queued: " + data.content_id);
+        setLog(xhsLog, []);
+        setJsonOutput(null);
+        await fetchXhsStatus();
+        if (modeState.xhs.pollTimer) clearInterval(modeState.xhs.pollTimer);
+        modeState.xhs.pollTimer = setInterval(fetchXhsStatus, 2200);
+      } catch {
+        setMeta(xhsMeta, "xhs start failed: network error");
+        xhsRunBtn.disabled = false;
+      }
+    }
+
+    modeStoryboardBtn.addEventListener("click", () => setMode("storyboard"));
+    modeXhsBtn.addEventListener("click", () => setMode("xhs"));
+    sbRunBtn.addEventListener("click", startStoryboardRun);
+    sbRefreshBtn.addEventListener("click", fetchStoryboardStatus);
+    xhsRunBtn.addEventListener("click", startXhsRun);
+    xhsRefreshBtn.addEventListener("click", fetchXhsStatus);
+
+    applyProgress({
+      chipEl: sbStatusChip,
+      textEl: sbProgressText,
+      fillEl: sbProgressFill,
+      listEl: sbStageList,
+      steps: sbSteps,
+      progress: { stage: "queued", percent: 0, chip: "IDLE", chipClass: "", errorText: "", status: "idle" },
+      errorEl: sbErrorBox,
+    });
+    applyProgress({
+      chipEl: xhsStatusChip,
+      textEl: xhsProgressText,
+      fillEl: xhsProgressFill,
+      listEl: xhsStageList,
+      steps: xhsSteps,
+      progress: { stage: "queued", percent: 0, chip: "IDLE", chipClass: "", errorText: "", status: "idle" },
+      errorEl: xhsErrorBox,
+    });
+    loadHealth();
+  </script>
+</body>
+</html>

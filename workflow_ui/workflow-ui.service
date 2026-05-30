@@ -1,0 +1,18 @@
+[Unit]
+Description=Commerce AI Workflow UI (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/video-shopping/workflow_ui
+Environment=PYTHONUNBUFFERED=1
+Environment=OPENAI_BASE_URL=http://127.0.0.1:8318/v1
+Environment=AD_DIRECTOR_MODEL=gpt-5.4-mini
+Environment=XHS_BUYER_MODEL=gpt-5.4-mini
+ExecStart=/usr/bin/python3 -m uvicorn app:app --host 0.0.0.0 --port 8600
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

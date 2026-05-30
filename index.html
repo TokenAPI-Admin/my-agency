@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电商一站式AI工作流</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --bg-soft: #ffffff;
+      --bg-dark: #0f1013;
+      --text: #101114;
+      --text-soft: #545861;
+      --text-dark: #f5f6f8;
+      --line: rgba(16, 17, 20, 0.12);
+      --line-dark: rgba(255, 255, 255, 0.14);
+      --glass: rgba(255, 255, 255, 0.62);
+      --shadow-soft: 0 14px 40px rgba(15, 16, 19, 0.09);
+      --shadow-stage: 0 24px 80px rgba(15, 16, 19, 0.22);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-sm: 10px;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, #fcfcfd 0%, var(--bg) 100%);
+      font-family: "SF Pro Display", "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+        "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    .wrap {
+      width: min(var(--max), calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      width: min(var(--max), calc(100% - 28px));
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.64);
+      background: var(--glass);
+      backdrop-filter: saturate(150%) blur(14px);
+      box-shadow: 0 8px 24px rgba(10, 10, 12, 0.08);
+    }
+
+    .brand {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111319;
+      white-space: nowrap;
+    }
+
+    .nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .nav a {
+      color: #2d3038;
+      text-decoration: none;
+      transition: opacity 220ms ease;
+      opacity: 0.82;
+    }
+
+    .nav a:hover {
+      opacity: 1;
+    }
+
+    .nav .pill {
+      padding: 9px 15px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 16, 19, 0.16);
+      color: #0f1013;
+      font-weight: 600;
+      opacity: 1;
+    }
+
+    main {
+      overflow: clip;
+    }
+
+    section {
+      position: relative;
+    }
+
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding-top: 100px;
+      padding-bottom: 80px;
+      background:
+        linear-gradient(180deg, #fafbfd 0%, #f3f4f7 52%, #f5f5f7 100%);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #5d6472;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+    }
+
+    h1, h2 {
+      margin: 0;
+      line-height: 1.06;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: clamp(36px, 7.2vw, 78px);
+      max-width: 14ch;
+    }
+
+    .lead {
+      margin: 20px 0 0;
+      max-width: 54ch;
+      color: var(--text-soft);
+      font-size: clamp(15px, 2.2vw, 20px);
+      line-height: 1.65;
+    }
+
+    .cta-row {
+      margin-top: 32px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 220ms ease, box-shadow 220ms ease;
+      will-change: transform;
+    }
+
+    .btn-primary {
+      color: #f4f7ff;
+      background: #1b2233;
+      box-shadow: 0 8px 20px rgba(27, 34, 51, 0.3);
+    }
+
+    .btn-secondary {
+      color: #1b2233;
+      border: 1px solid rgba(27, 34, 51, 0.22);
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .stage {
+      margin-top: 62px;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(241, 244, 250, 0.86));
+      box-shadow: var(--shadow-stage);
+      padding: clamp(20px, 4vw, 40px);
+    }
+
+    .stage-shell {
+      display: grid;
+      grid-template-columns: 1fr 120px 1fr;
+      gap: clamp(14px, 2.2vw, 22px);
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: var(--shadow-soft);
+      padding: clamp(14px, 2.3vw, 22px);
+      min-height: 260px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    .visual-core {
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(16, 17, 20, 0.08);
+      background:
+        linear-gradient(180deg, #fafbff 0%, #f0f2f8 100%);
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75), var(--shadow-soft);
+    }
+
+    .ring {
+      width: 84px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(27, 34, 51, 0.18);
+      position: absolute;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .ring:nth-child(2) {
+      width: 124px;
+      animation-delay: 0.2s;
+      opacity: 0.74;
+    }
+
+    .ring:nth-child(3) {
+      width: 162px;
+      animation-delay: 0.4s;
+      opacity: 0.5;
+    }
+
+    .core-title {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      font-size: 13px;
+      color: #2c3240;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .flow {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+      padding: 118px 0;
+    }
+
+    .flow h2 {
+      font-size: clamp(30px, 5vw, 58px);
+      max-width: 12ch;
+    }
+
+    .flow p {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: rgba(245, 246, 248, 0.72);
+      line-height: 1.7;
+    }
+
+    .rail {
+      margin-top: 42px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    }
+
+    .rail-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: stretch;
+    }
+
+    .rail-step {
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px;
+      min-height: 118px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .rail-step .n {
+      font-size: 11px;
+      opacity: 0.66;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .rail-step strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .rail-step span {
+      display: block;
+      font-size: 12px;
+      color: rgba(245, 246, 248, 0.74);
+      line-height: 1.6;
+    }
+
+    .story {
+      padding: 112px 0;
+      background:
+        linear-gradient(180deg, #f8f8fa 0%, #f1f2f5 100%);
+    }
+
+    .story h2 {
+      font-size: clamp(30px, 4.8vw, 54px);
+      max-width: 14ch;
+    }
+
+    .story-grid {
+      margin-top: 36px;
+      display: grid;
+      gap: 28px;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+    }
+
+    .story-seq {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: clamp(18px, 2.5vw, 26px);
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: var(--shadow-soft);
+      min-height: 460px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .seq-row {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(16, 17, 20, 0.07);
+    }
+
+    .seq-row:last-child {
+      border-bottom: 0;
+    }
+
+    .seq-row b {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(16, 17, 20, 0.22);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #232630;
+    }
+
+    .seq-row h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .seq-row p {
+      margin: 5px 0 0;
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    .console {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: #111318;
+      box-shadow: var(--shadow-stage);
+      overflow: hidden;
+      min-height: 460px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .console-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .console-body {
+      padding: 18px;
+      color: rgba(240, 242, 248, 0.9);
+      font-family: "SF Mono", "JetBrains Mono", "Consolas", monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+
+    .reveal.on {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .footer {
+      padding: 34px 0 40px;
+      background: #f1f2f5;
+      border-top: 1px solid rgba(16, 17, 20, 0.08);
+    }
+
+    .footer .wrap {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: #5d6472;
+      font-size: 12px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.55; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+
+    @media (max-width: 980px) {
+      .stage-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .story-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .rail-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        width: min(var(--max), calc(100% - 28px));
+      }
+
+      .topbar {
+        top: 10px;
+        padding: 10px 12px;
+      }
+
+      .nav a:not(.pill) {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 88px;
+      }
+
+      h1 {
+        font-size: clamp(34px, 12vw, 48px);
+      }
+
+      .rail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer .wrap {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Commerce AI Flow</div>
+    <nav class="nav">
+      <a href="#flow">工作流</a>
+      <a href="#story">控制台</a>
+      <a href="#hero" class="pill">开始构建</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="hero" class="hero">
+      <div class="wrap">
+        <span class="eyebrow reveal">电商一站式AI工作流</span>
+        <h1 class="reveal">把选品、素材、分镜与生成整合成一条流畅链路</h1>
+        <p class="lead reveal">一个克制但强力的工作台：上传产品与固定模特，锁定品类一致性，自动生成三视图与导演分镜总图，让每次创作都有可复用的稳定路径。</p>
+        <div class="cta-row reveal">
+          <a href="#flow" class="btn btn-primary">查看流程</a>
+          <a href="#story" class="btn btn-secondary">查看执行界面</a>
+        </div>
+
+        <div class="stage reveal" aria-label="产品居中展示">
+          <div class="stage-shell">
+            <article class="panel">
+              <h3>输入层</h3>
+              <p>产品主图、固定模特图、分辨率阈值在进入生成前完成校验。低于标准时直接阻断，避免错误消耗与跑偏结果。</p>
+            </article>
+            <div class="visual-core" role="img" aria-label="工作流引擎">
+              <div class="ring"></div>
+              <div class="ring"></div>
+              <div class="ring"></div>
+              <div class="core-title">Workflow<br>Core</div>
+            </div>
+            <article class="panel">
+              <h3>输出层</h3>
+              <p>单次任务固定两步：先出三视图，再以产品图与模特图驱动分镜总图。结构清晰、成本可控、结果可复核。</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="flow" class="flow">
+      <div class="wrap">
+        <h2 class="reveal">从素材确认到分镜产出，一次点击完成闭环</h2>
+        <p class="reveal">系统在任务开始前锁定上游，执行期间不切换，不重试，不重复提交。你得到的是可控、可追踪、可复用的生成路径，而不是不可预期的多次消耗。</p>
+        <div class="rail reveal">
+          <div class="rail-grid">
+            <div class="rail-step">
+              <span class="n">01</span>
+              <strong>上传与校验</strong>
+              <span>识别路径、验证分辨率、检查固定模特输入完整性。</span>
+            </div>
+            <div class="rail-step">
+              <span class="n">02</span>
+              <strong>三视图生成</strong>
+              <span>自动识别品类并保持一致，输出结构化商品视图。</span>
+            </div>
+            <div class="rail-step">
+              <span class="n">03</span>
+              <strong>分镜总图生成</strong>
+              <span>以产品图、三视图和固定模特联合驱动，确保人物与商品稳定。</span>
+            </div>
+            <div class="rail-step">
+              <span class="n">04</span>
+              <strong>结果交付</strong>
+              <span>展示预览、路径、执行日志，便于复盘与二次迭代。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="story" class="story">
+      <div class="wrap">
+        <span class="eyebrow reveal">Execution Surface</span>
+        <h2 class="reveal">简洁界面背后，是硬约束驱动的稳定执行</h2>
+        <div class="story-grid">
+          <div class="story-seq reveal">
+            <div class="seq-row">
+              <b>01</b>
+              <div>
+                <h4>锁定输入</h4>
+                <p>固定产品主参考与固定模特资产，消除每轮任务的随机漂移源。</p>
+              </div>
+            </div>
+            <div class="seq-row">
+              <b>02</b>
+              <div>
+                <h4>阻断低质输入</h4>
+                <p>分辨率未达阈值立即终止，防止模糊参考图导致品类误判。</p>
+              </div>
+            </div>
+            <div class="seq-row">
+              <b>03</b>
+              <div>
+                <h4>维持品类一致性</h4>
+                <p>在三视图与分镜提示中嵌入同品类硬约束，避免商品替换。</p>
+              </div>
+            </div>
+            <div class="seq-row">
+              <b>04</b>
+              <div>
+                <h4>单次任务闭环</h4>
+                <p>任务期间不切上游、不自动重试，输出结果可直接进入下一轮素材策略。</p>
+              </div>
+            </div>
+          </div>
+          <aside class="console reveal" aria-label="执行日志预览">
+            <div class="console-head">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="console-body" id="consoleText"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span>电商一站式AI工作流</span>
+      <span>稳定输入 · 受控生成 · 可追踪交付</span>
+    </div>
+  </footer>
+
+  <script>
+    const lines = [
+      "[check] product_main_ref1.png 1727456 bytes 1536x1024",
+      "[check] model_fixed_board1.png 2200097 bytes 1536x1024",
+      "[check] model_fixed_board2.png 2128139 bytes 1536x1024",
+      "[run] step 1/2 three-view generation started",
+      "[run] step 1/2 completed -> kent_three_view.png",
+      "[run] step 2/2 storyboard generation started",
+      "[run] step 2/2 completed -> kent_storyboard_overview.png",
+      "[done] outputs ready and verified"
+    ];
+
+    const consoleEl = document.getElementById("consoleText");
+    let idx = 0;
+    const tick = () => {
+      if (idx < lines.length) {
+        consoleEl.textContent += lines[idx] + "\n";
+        idx += 1;
+        setTimeout(tick, 340);
+      }
+    };
+    setTimeout(tick, 400);
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("on");
+          observer.unobserve(entry.target);
+        }
+      }
+    }, { threshold: 0.18 });
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  </script>
+</body>
+</html>
