@@ -20,6 +20,9 @@ workflow_ui/content_runs/
 out/
 logs/
 *.log
+.tmp/
+_inspect_latest/
+_inspect_outputs/
 
 # OS / editor
 .DS_Store
